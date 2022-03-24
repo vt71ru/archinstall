@@ -1,9 +1,30 @@
 #!/usr/bin/env bash
 # Copyright (C) 2022 Vladimir Titov
+init() {
+
 setfont cyr-sun16.psfu.gz
-loadkeys ru
-echo -e "Привет Arch Linux"
-dialog --title "Welcome to Arch Linux Installer" \
+
+dialog --backtitle "Arch Linux Installer"  --title "Welcome to Arch Linux Installer" \
     --ok-label "Begin Installation" --msgbox "Navigating the installer is \
 easy.\nYou may select options using the ARROW keys and SPACE or \
 ENTER.\nAlternate keys may also be used: '+', '-', and TAB." 7 70
+}
+
+main() {
+  init
+  check_connection
+  set_keymap
+  set_locale
+  set_timezone
+  set_hostname
+  set_root_passwd
+  create_user
+  prepare_disk
+  update_mirrorlist
+  configure_install
+  install_base
+  configure_system
+  reboot_system
+}
+
+main
