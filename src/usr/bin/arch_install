@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Copyright (C) 2022 Vladimir Titov
+
 init() {
 
 setfont cyr-sun16.psfu.gz
@@ -8,6 +9,21 @@ dialog --backtitle "Arch Linux Installer"  --title "Welcome to Arch Linux Instal
     --ok-label "Begin Installation" --msgbox "Navigating the installer is \
 easy.\nYou may select options using the ARROW keys and SPACE or \
 ENTER.\nAlternate keys may also be used: '+', '-', and TAB." 7 70
+}
+
+# Proceed with installation only if there is an internet connection
+check_connection() {
+  dialog --infobox "Checking internet connection..." 3 50
+  # Check if a web page is available
+  if ! nc -zw1 archlinux.org 443; then
+    dialog --title "Connect to the Internet" \
+      --msgbox "The installer was unable to detect a working internet \
+connection. The installation media supports wired network devices on \
+boot. Make sure the cable is plugged in. Wireless users should use the \
+'iwctl' command to connect to a wireless connection.\n\nOnce you have \
+a working internet connection, retry running the installer." 10 80
+    reset ; exit 1
+  fi
 }
 
 main() {
