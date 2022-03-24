@@ -3,3 +3,7 @@
 setfont cyr-sun16.psfu.gz
 loadkeys ru
 echo -e "Привет Arch Linux"
+dialog --title "Welcome to Arch Linux Installer" \
+    --ok-label "Begin Installation" --msgbox "Navigating the installer is \
+easy.\nYou may select options using the ARROW keys and SPACE or \
+ENTER.\nAlternate keys may also be used: '+', '-', and TAB." 7 70
