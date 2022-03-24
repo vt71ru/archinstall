@@ -1,2 +1,5 @@
 #!/usr/bin/env bash
 # Copyright (C) 2022 Vladimir Titov
+setfont cyr-sun16.psfu.gz
+loadkeys ru
+echo -e "Привет Arch Linux"
