@@ -22,7 +22,8 @@ connection. The installation media supports wired network devices on \
 boot. Make sure the cable is plugged in. Wireless users should use the \
 'iwctl' command to connect to a wireless connection.\n\nOnce you have \
 a working internet connection, retry running the installer." 10 80
-    reset ; exit 1
+#    reset ; exit 1
+  iwd
   fi
 }
 
