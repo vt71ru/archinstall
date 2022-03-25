@@ -27,6 +27,65 @@ a working internet connection, retry running the installer." 10 80
   fi
 }
 
+# Menu which allows the user to navigate the installer
+main_menu() {
+  while true; do
+    choice=$(dialog --title "Main Menu" --nocancel \
+      --menu "Select an option below using the UP/DOWN keys and SPACE or \
+ENTER.\nAlternate keys may also be used: '+', '-', and TAB." 19 70 11 \
+"KEYMAP" "Set the keyboard layout" \
+"LOCALE" "Set the system locale" \
+"TIMEZONE" "Set the system time zone" \
+"HOSTNAME" "Set the system's hostname" \
+"ROOT PASSWORD" "Set the root password" \
+"CREATE USER" "Create your user account" \
+"PARTITION" "Partition the installation drive" \
+"UPDATE MIRRORS" "Update the pacman mirror list" \
+"INSTALL" "Install Arch Linux" \
+"REBOOT" "Reboot system" \
+"EXIT" "Exit Arch Linux Installer" 3>&1 1>&2 2>&3)
+
+    case "$choice" in
+      "KEYMAP") set_keymap ;;
+      "LOCALE") set_locale ;;
+      "TIMEZONE") set_timezone ;;
+      "HOSTNAME") set_hostname ;;
+      "ROOT PASSWORD") set_root_passwd ;;
+      "CREATE USER") create_user ;;
+      "PARTITION") if $mounted; then
+                     dialog --title "Partition the Disks" \
+                       --yesno "A disk is mounted on the system and ready for \
+installation.\n\nAre you sure you want to return to partitioning?" 7 70
+                     if [ $? -eq 0 ]; then
+                       mounted=false
+                       prepare_disk
+                     fi
+                   else
+                    prepare_disk
+                   fi
+                   ;;
+      "UPDATE MIRRORS") update_mirrorlist ;;
+      "INSTALL") if $mounted; then
+                   configure_install
+                   install_base
+                   configure_system
+                   reboot_system
+                 else
+                   dialog --title "ERROR: No Filesytem Mounted" \
+                     --yesno "The installer was unable to detect a \
+mounted filesystem.\n\nReturn to partitioning?" 7 60
+                   if [ $? -eq 0 ]; then
+                     prepare_disk
+                   fi
+                 fi
+                 ;;
+      "REBOOT") reboot_system ;;
+      "EXIT") reset ; exit ;;
+    esac
+  done
+}
+
+
 main() {
   init
   check_connection
