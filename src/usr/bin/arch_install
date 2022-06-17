@@ -9,6 +9,8 @@
 -------------------------------------------------------------------------
 source ./arch_install.conf
 
+setfont ter-v18n
+
 set_font() {
 dialog --infobox "Set terminux font" 10 30 
 setfont -v ter-v16n &> /dev/null
