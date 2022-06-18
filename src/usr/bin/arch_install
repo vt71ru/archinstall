@@ -8,7 +8,7 @@ setfont -v ter-v16n &> /dev/null
 sleep 4
 }
 
-set_locale(){
+set_locale() {
 echo -e 'Setup locale'
 loadkeys ru
 sed -i 's/^#ru_RU.UTF-8 UTF-8/ru_RU.UTF-8 UTF-8/' /etc/locale.gen
@@ -17,9 +17,9 @@ echo 'Export language'
 export LANG=ru_RU.UTF-8
 }
 
-main(){
-	setfont()
-	set_locale()
+main() {
+	setfont
+	set_locale
 #	echo -e "Update pacman base"
 #	pacman -Syy
 #	pacman -Suy
