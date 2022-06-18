@@ -51,8 +51,6 @@ echo -e 'Setup locale'
 loadkeys ru
 sed -i 's/^#ru_RU.UTF-8 UTF-8/ru_RU.UTF-8 UTF-8/' /etc/locale.gen
 locale-gen
-echo 'Export language'
-export LANG=ru_RU.UTF-8
 }
 
 main() {
