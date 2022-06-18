@@ -1,6 +1,6 @@
 source ./arch_install.conf
 
-setfont ter-v18n
+setfont ter-v22b
 
 set_font() {
 dialog --infobox "Set terminux font" 10 30 
