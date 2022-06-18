@@ -18,8 +18,8 @@ export LANG=ru_RU.UTF-8
 }
 
 main() {
-	setfont
-	set_locale
+#	setfont
+#	set_locale
 #	echo -e "Update pacman base"
 #	pacman -Syy
 #	pacman -Suy
