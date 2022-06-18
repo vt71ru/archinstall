@@ -4,7 +4,7 @@ setfont ter-v22b
 
 set_font() {
 dialog --infobox "Set terminux font" 10 30 
-setfont -v ter-v16n &> /dev/null
+setfont -v ter-v22n &> /dev/null
 sleep 4
 }
 
@@ -18,7 +18,7 @@ export LANG=ru_RU.UTF-8
 }
 
 main() {
-#	setfont
+	setfont
 #	set_locale
 #	echo -e "Update pacman base"
 #	pacman -Syy
