@@ -13,7 +13,7 @@ echo "Directory for script files:    "$dir_scripts
 
 for script in "${dir_scripts}"/*.sh ; do
         [[ -e "${script}" ]] || break
-        # shellcheck source=/usr/lib/anarchy/*.sh
-        echo $script
         source "${script}"
 done
+
+first
