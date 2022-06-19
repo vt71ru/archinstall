@@ -40,7 +40,7 @@ set_font() {
         "Portuguese-Brazilian") export lang_file="${anarchy_directory}"/lang/portuguese-br.conf lib=pt-br bro=pt-br ;;
         "Romanian") export lang_file="${anarchy_directory}"/lang/romanian.conf lib=ro bro=ro ;;
         "Russian") export lang_file=/lang/russian.lng
-	           setfont ter-v22n ;;
+	           setfont cyr-sun16 ;;
         "Spanish") export lang_file="${anarchy_directory}"/lang/spanish.conf lib=es bro=es-es ;;
         "Swedish") export lang_file="${anarchy_directory}"/lang/swedish.conf lib=sv bro=sv-se ;;
     esac
