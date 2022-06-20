@@ -17,6 +17,8 @@ done
 
 source "${dir_config}"
 language
-    # shellcheck source=/usr/share/anarchy/lang
-    source "${lang_file}" # /lib/language.sh:43-60
-    export reload=true
+# shellcheck source=/usr/share/anarchy/lang
+source "${lang_file}" # /lib/language.sh:43-60
+export reload=true
+
+set_locale
