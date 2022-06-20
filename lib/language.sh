@@ -1,8 +1,8 @@
 #!/usr/bin/env bash 
 language() {
 
-    echo "$(date -u "+%F %H:%M") : Start anarchy installer" > "${log}"
-    op_title=" -| Language Select |- "
+    //echo "$(date -u "+%F %H:%M") : Start anarchy installer" > "${log}"
+    //op_title=" -| Language Select |- "
     ILANG=$(dialog --nocancel --menu "\nAnarchy Installer\n\n \Z2*\Zn Select your install language:" 20 60 10 \
         "English" "-" \
         "Bulgarian" "Български" \
