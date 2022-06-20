@@ -39,7 +39,7 @@ language() {
         "Portuguese") export lang_file="${directory}"/lang/portuguese.conf lib=pt bro=pt-pt ;;
         "Portuguese-Brazilian") export lang_file="${directory}"/lang/portuguese-br.conf lib=pt-br bro=pt-br ;;
         "Romanian") export lang_file="${directory}"/lang/romanian.conf lib=ro bro=ro ;;
-        "Russian") export lang_file="${directory}"/lang/russian.conf lib=ru bro=ru ;;
+        "Russian") export lang_file="${directory}"/lang/russian.lng lib=ru bro=ru ;;
         "Spanish") export lang_file="${directory}"/lang/spanish.conf lib=es bro=es-es ;;
         "Swedish") export lang_file="${directory}"/lang/swedish.conf lib=sv bro=sv-se ;;
     esac
