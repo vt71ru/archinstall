@@ -7,6 +7,14 @@ locale-gen >> /dev/null
 setfont cyr-sun16
 }
 
+dialog_msg() {
+
+title=" -| Anarchy |- "
+
+backtitle=" -| My Linux Installer |- "
+
+}
+
 main_msg() {
 
 error="Ошибка:"
@@ -18,4 +26,8 @@ no="Нет"
 ok="Ок"
 
 cancel="Отмена"
+}
+
+ethetnet() {
+msg1="Проверка подключения к интернету"
 }
