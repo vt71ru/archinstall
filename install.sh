@@ -16,6 +16,7 @@ for script in "${dir_scripts}"/*.sh ; do
 done
 
 source "${dir_config}"
+config
 language
 # shellcheck source=/usr/share/anarchy/lang
 source "${lang_file}" # /lib/language.sh:43-60
