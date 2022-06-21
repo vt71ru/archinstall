@@ -23,6 +23,7 @@ export reload=true
 
 main() {
 set_locale
+check_connect
 }
 
 init
