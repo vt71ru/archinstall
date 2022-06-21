@@ -1,7 +1,7 @@
 #!/usr/bin/env  bash
 
 init() {
-Begin...........................
+echo -e "Begin..............................."
 directory=$(dirname "$(readlink -f "$0")") #git repository
 
 echo "Directory:    "$directory
