@@ -11,3 +11,6 @@
 ###
 ### License: GPL v2.0
 ###############################################################
+check_connect() {
+dialog --backtitle $backtitle --infobox $msg1 5 50
+}
