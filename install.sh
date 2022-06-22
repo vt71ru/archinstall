@@ -23,9 +23,10 @@ export reload=true
 
 main() {
 echo $lang_file
-sleep 10
-echo $msg1
+sleep 1
+
 set_locale
+sleep 1
 check_connect
 }
 
