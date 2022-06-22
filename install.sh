@@ -22,6 +22,8 @@ export reload=true
 }
 
 main() {
+echo $lang_file
+sleep 10
 set_locale
 check_connect
 }
