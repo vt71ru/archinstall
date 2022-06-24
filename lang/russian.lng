@@ -3,22 +3,16 @@ LANG="ru_RU.UTF-8"
 title=" -| My linux |- "
 backtitle=" -| My Linux Installer |- "
 
-
 error="Ошибка:"
 
 yes="Да"
-
 no="Нет"
 
 ok="Ок"
-
 cancel="Отмена"
-}
-
 
 connection1="-| Проверка cоединения |- "
 msg1="Проверка подключения к интернету"
-
 
 set_locale() {
 dialog --backtitle "$backtitle"  --title "$title" --infobox "\nSetup locale\n" 5 30
