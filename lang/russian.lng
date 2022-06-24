@@ -1,13 +1,8 @@
 LANG="ru_RU.UTF-8"
-dialog_msg() {
 
-title=" -| Anarchy |- "
-
+title=" -| My linux |- "
 backtitle=" -| My Linux Installer |- "
 
-}
-
-main_msg() {
 
 error="Ошибка:"
 
@@ -20,15 +15,13 @@ ok="Ок"
 cancel="Отмена"
 }
 
-backtitle="123321"
 
-
-ethetnet() {
+connection1="-| Проверка cоединения |- "
 msg1="Проверка подключения к интернету"
-}
+
 
 set_locale() {
-dialog --backtitle "$backtitle"  --infobox "\nSetup locale\n" 5 30
+dialog --backtitle "$backtitle"  --title "$title" --infobox "\nSetup locale\n" 5 30
 loadkeys ru
 sed -i 's/^#ru_RU.UTF-8 UTF-8/ru_RU.UTF-8 UTF-8/' /etc/locale.gen
 locale-gen >> /dev/null
