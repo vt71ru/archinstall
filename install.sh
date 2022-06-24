@@ -23,10 +23,8 @@ export reload=true
 
 main() {
 echo $lang_file
-sleep 1
 
 set_locale
-sleep 1
 check_connect
 }
 
