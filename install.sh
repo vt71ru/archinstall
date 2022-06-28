@@ -28,6 +28,7 @@ set_locale
 check_connect
 clear
 echo $zonelist
+set_tz
 }
 
 init
