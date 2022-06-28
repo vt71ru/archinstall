@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 set_tz() {
   ZONE=$(dialog --nocancel --ok-button "$ok" --menu "$zone_msg0" 18 60 11 $zonelist 3>&1 1>&2 2>&3)
         if (find /usr/share/zoneinfo -maxdepth 1 -type d | sed -n -e 's!^.*/!!p' | grep "$ZONE" &> /dev/null); then
@@ -19,5 +20,4 @@ set_tz() {
         else
             break
         fi
-    done
 }
