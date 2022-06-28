@@ -26,8 +26,6 @@ echo $lang_file
 
 set_locale
 check_connect
-clear
-echo $zonelist
 }
 
 init
