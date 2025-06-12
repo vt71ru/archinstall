@@ -35,7 +35,7 @@ fi
 }
 
 part() {
-dialog --no-cancel --ascii-lines --title "$title_part" --backtitle "$HEADER" --msgbox "part1" 9 45
+dialog --no-cancel --ascii-lines --title "$title_part" --backtitle "$HEADER" --msgbox "$part1" 9 45
 
 retval=$?
 echo
@@ -47,7 +47,7 @@ case $retval in
         if [ "$BOOT_MODE" = "UEFI" ]
         then
             #window
-            dialog --ok-button "I Know" --ascii-lines --title "$title_part" --backtitle "$HEADER" --msgbox "part2" 18 70
+            dialog --ok-button "I Know" --ascii-lines --title "$title_part" --backtitle "$HEADER" --msgbox "$part2" 18 70
 
             retval=$?
             case $retval in
