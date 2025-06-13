@@ -1,7 +1,7 @@
 LANG="ru_RU.UTF-8"
 
 title=" -| My linux |- "
-backtitle=" -| My Linux Installer |- "
+backtitle=" -| Установщик Arch linux |- "
 
 error="Ошибка:"
 
