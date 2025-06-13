@@ -211,4 +211,5 @@ esac
 
 init
 keyboard
+set_locale
 part
