@@ -3,8 +3,12 @@
 HEADER="Archlinux Installer"
 EXIT_MSG="You have left from Archlinux Installer!" 
 
+title_kbd="Keymap Selection"
 title_part="Partition the disks"
+title_mnt="Mount the file systems"
 
+kbd1="The default console keymap is US. Would you want to set a \
+non-default keymap for your keyboard?  [ESC] to exit installer\n\nPlease confirm before typing the [ENTER], because you can't undo it."
 part1="Before you install Archlinux, you need to partition your hard disk.\n\n[ESC] to exit installer"
 part2="Hey! Your boot mode is UEFI, so you must create an ESP partition \
 (EFI system partition). If, \n\n(1)You have installed Windows on your computer, and its boot \
@@ -32,6 +36,69 @@ else
     echo "Boot mode is BIOS"
 fi
 
+}
+
+keyboard() {
+
+dialog --ascii-lines --default-button "No" --title "$title_kbd" --backtitle "$HEADER" --yesno "$kbd1" 10 45
+
+# never add a command between command `dialog -ascii-lines...` and command retval_out=$?
+retval_out=$?
+echo
+
+case $retval_out in
+    # 0) Yes -- reset keymap
+        0)
+
+        # get all keymap
+        function list_all_keymap
+        {
+            for keymap in $(find /usr/share/kbd/keymaps/ -name "*.map.gz") # should enclose the pattern in quotes
+            do
+                # get basename
+                file=${keymap##*/}
+                printf "${file%%.*} ...... "
+            done
+        }
+
+        # window
+
+        msg="The default console keymap is US.Other keymaps can be chosen below.\
+        \n\n[Arrow keys] to move,[ENTER] to select.	[ESC] to exit installer\n\nPlease confirm before typing the [ENTER], because you can't undo it."
+        keymap_list="US default $(list_all_keymap)"
+
+        dialog --no-cancel --ascii-lines --ok-label "Select" --title "$title" \
+            --backtitle "$HEADER" --menu "$kbd1" 18 59 18 $keymap_list 2>tempfile
+
+        retval_inner=$?
+        echo
+        case $retval_inner in
+            0) # Yes
+                choice=$(cat tempfile)
+
+                #reset keymap temporary
+                if [ "$choice" != "US" ]
+                then
+                    #loadkeys "$choice"
+                    #KEY_MAP="$choice"
+                    .    ./lang/lang.$choice
+                    echo "lang.$choice"
+                else
+                    loadkeys us
+                    KEY_MAP="us"
+                fi
+                ;;
+            255) # ESC
+                echo $EXIT_MSG
+                exit 255;;
+        esac
+        ;;
+
+    # 255) ESC -- exit the installer
+        255)
+        echo $EXIT_MSG
+        exit 255;;
+esac
 }
 
 part() {
@@ -143,4 +210,5 @@ esac
 }
 
 init
+keyboard
 part
