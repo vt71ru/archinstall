@@ -81,9 +81,61 @@ easy.\nYou may select options using the ARROW keys and SPACE or \
 ENTER.\nAlternate keys may also be used: '+', '-', and TAB." 7 70
 }
 
+check_connection() {
+  dialog --infobox "Checking internet connection..." 3 50
+  # Check if a web page is available
+  if ! nc -zw1 archlinux.org 443; then
+    dialog --title "Connect to the Internet" \
+      --msgbox "The installer was unable to detect a working internet \
+connection. The installation media supports wired network devices on \
+boot. Make sure the cable is plugged in. Wireless users should use the \
+'iwctl' command to connect to a wireless connection.\n\nOnce you have \
+a working internet connection, retry running the installer." 10 80
+    reset ; exit 1
+  fi
+}
+
+set_keymap() {
+  while true; do
+    KEYMAP=$(dialog --title "Set the Keyboard Layout" --nocancel \
+      --default-item "us" --menu "Select a keymap that corresponds to your \
+keyboard layout. Choose 'other' if your keymap is not listed. If you are \
+unsure, the default is 'us' (United States/QWERTY).\n\nKeymap:" 22 57 10 \
+"fr" "French" \
+"de" "German" \
+"gr" "Greek" \
+"hu" "Hungarian" \
+"it" "Italian" \
+"pl" "Polish" \
+"ru" "Russian" \
+"es" "Spanish" \
+"us" "United States" \
+"other" "View all available keymaps" 3>&1 1>&2 2>&3)
+
+    if [ "$KEYMAP" = "other" ]; then
+      keymaps=()
+      for map in $(localectl list-keymaps); do
+        keymaps+=("$map" "")
+      done
+      KEYMAP=$(dialog --title "Set the Keyboard Layout" --cancel-label "Back" \
+        --menu "Select a keymap that corresponds to your keyboard layout. The \
+default is 'us' (United States/QWERTY)." 30 60 25 \
+"${keymaps[@]}" 3>&1 1>&2 2>&3)
+      if [ $? -eq 0 ]; then
+        break
+      fi
+    else
+      break
+    fi
+  done
+  dialog --infobox "Setting keymap to $KEYMAP..." 3 50
+  localectl set-keymap "$KEYMAP"
+  loadkeys "$KEYMAP"
+}
+
 main() {
   init
-#  check_connection
+  check_connection
 # set_keymap
 #  set_locale
 #  set_timezone
