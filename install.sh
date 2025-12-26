@@ -133,11 +133,57 @@ default is 'us' (United States/QWERTY)." 30 60 25 \
   loadkeys "$KEYMAP"
 }
 
+set_locale() {
+  while true; do
+    LOCALE=$(dialog --title "Set the System Locale" --nocancel \
+      --default-item "en_US.UTF-8" --menu "Select a locale that corresponds \
+to your language and region. The locale you select will define the language \
+used by the system and other region specific information. Choose 'other' if \
+your language and/or region is not listed. If you are unsure, the default is \
+'en_US.UTF-8'.\n\nLocale:" 30 65 16 \
+"zh_CN.UTF-8" "Chinese (Simplified)" \
+"en_AU.UTF-8" "English (Australia)" \
+"en_CA.UTF-8" "English (Canada)" \
+"en_US.UTF-8" "English (United States)" \
+"en_GB.UTF-8" "English (Great Britain)" \
+"fr_FR.UTF-8" "French (France)" \
+"de_DE.UTF-8" "German (Germany)" \
+"it_IT.UTF-8" "Italian (Italy)" \
+"ja_JP.UTF-8" "Japanese (Japan)" \
+"pt_BR.UTF-8" "Portuguese (Brazil)" \
+"pt_PT.UTF-8" "Portuguese (Portugal)" \
+"ru_RU.UTF-8" "Russian (Russia)" \
+"es_MX.UTF-8" "Spanish (Mexico)" \
+"es_ES.UTF-8" "Spanish (Spain)" \
+"sv_SE.UTF-8" "Swedish (Sweden)" \
+"other" "View all available locales" 3>&1 1>&2 2>&3)
+
+    if [ "$LOCALE" = "other" ]; then
+      locales=()
+      # Read each entry in /etc/locale.gen and remove comments and spaces
+      while read -r line; do
+        locales+=("$line" "")
+      done < <(grep -E "^#?[a-z].*UTF-8" /etc/locale.gen | sed -e 's/#//' -e 's/\s.*$//')
+      LOCALE=$(dialog --title "Set the System Locale" --cancel-label "Back" \
+        --menu "Select a locale that corresponds to your language and region. \
+The locale you select will define the language used by the system and other
+region specific information. If you are unsure, the default is \
+'en_US.UTF-8'.\n\nLocale:" 30 65 16 \
+"${locales[@]}" 3>&1 1>&2 2>&3)
+      if [ $? -eq 0 ]; then
+          break
+      fi
+    else
+      break
+    fi
+  done
+}
+
 main() {
   init
   check_connection
-# set_keymap
-#  set_locale
+  set_keymap
+  set_locale
 #  set_timezone
 #  set_hostname
 #  set_root_passwd
