@@ -1196,7 +1196,7 @@ mounted filesystem.\n\nReturn to partitioning?" 7 60
 
 main() {
   init
-  check_connection
+  #check_connection
   set_keymap
   set_locale
   set_timezone
