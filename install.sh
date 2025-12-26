@@ -370,7 +370,7 @@ prepare_disk() {
     device_size=$(lsblk -d -n -r -o SIZE "$device")
     block_devices+=("$device" "$device_size")
   done
-
+  echo $device
   check_mountpoints
   while true; do
     PARTITION_LAYOUT=$(dialog --title "Partition the Disks" \
