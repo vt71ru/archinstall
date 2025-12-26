@@ -2,6 +2,32 @@
 # Main script for the installation
 
 echo -e "Begin........"
+################
+## CONFIGURE THESE VARIABLES
+################
+
+# Drive to install to.
+DRIVE=''
+
+# Hostname of the installed machine.
+HOSTNAME=''
+
+# Partitions
+BOOTPART=''
+ROOTPART=''
+HOMEPART=''
+SWAP=''
+
+# System timezone.
+TIMEZONE=''
+# Root password (leave blank to be prompted).
+ROOT_PASSWORD=''
+
+# Main user to create (by default, added to wheel group, and others).
+USER_NAME='voffka'
+
+# The main user's password (leave blank to be prompted).
+USER_PASSWORD=''
 
 lsblk
 
