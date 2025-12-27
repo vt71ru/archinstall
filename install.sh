@@ -360,18 +360,16 @@ than 32 characters long." 9 80
   done
 }
 
-block_device() {
+# Prepare the user's selected disk for partitioning
+prepare_disk() {
+
 block_devices=()
   # List all available block devices excluding 'rom' and 'loop'
   for device in $(lsblk -d -n -p -r -e 7,11 -o NAME); do
     device_size=$(lsblk -d -n -r -o SIZE "$device")
     block_devices+=("$device" "$device_size")
   done
-}
-
-# Prepare the user's selected disk for partitioning
-prepare_disk() {
-block_device()
+  
 DISK=$(dialog --title "Set the Installation Disk" --cancel-label "Back" \
         --menu "Select the disk for Arch Linux to be installed on. Note that \
                the disk you select will be erased, but not until you have confirmed the \
