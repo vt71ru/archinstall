@@ -11,7 +11,9 @@ Green="\\033[32m"
 #Green_background_prefix="\\033[42;37m"
 #Font_color_suffix="\\033[0m"
 DISK=''
+
 echo -e "${Green}Begin........"
+
 ################
 ## CONFIGURE THESE VARIABLES
 ################
@@ -405,10 +407,7 @@ case $METHOD_PART in
       cd ..
     ;;
     3 )
-      cd "$1"
-      result=$(ls -lt)
-      display_file_details "$result" 
-      cd ..
+      cfdisk $DISK
     ;;
 esac
 }
