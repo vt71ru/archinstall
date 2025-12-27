@@ -362,135 +362,140 @@ than 32 characters long." 9 80
 
 # Prepare the user's selected disk for partitioning
 prepare_disk() {
-  SWAP="-"
-  swap_enabled=false
-  block_devices=()
-  # List all available block devices excluding 'rom' and 'loop'
-  for device in $(lsblk -d -n -p -r -e 7,11 -o NAME); do
-    device_size=$(lsblk -d -n -r -o SIZE "$device")
-    block_devices+=("$device" "$device_size")
-  done
-  echo $device
-  check_mountpoints
-  while true; do
-    PARTITION_LAYOUT=$(dialog --title "Partition the Disks" \
-      --cancel-label "Exit to Menu" \
-      --menu "The installer will now automatically partition a disk for you. \
-If you have no preference or are unsure about which partition layout to \
-choose, the 'Basic' layout is the simplest and should be enough for most use \
-cases.\n\nPartition layout:" 14 80 3 \
-"Basic" "Use entire disk" \
-"LVM" "Use entire disk and set up LVM" \
-"Encrypted" "Use entire disk and set up encrypted LVM" 3>&1 1>&2 2>&3)
+METHOD_PART=$(dialog --title "Partition the Disks" \
+            --menu "select a disk partitioning method" 14 80 3 \
+            "Automatic partition" "Automatic method" \
+            "Manual partition" "Manual method" \
+            "Pre-mounted" "pre-created partition" 3>&1 1>&2 2>&3)
+#  SWAP="-"
+#  swap_enabled=false
+#  block_devices=()
+#  # List all available block devices excluding 'rom' and 'loop'
+#  for device in $(lsblk -d -n -p -r -e 7,11 -o NAME); do
+#    device_size=$(lsblk -d -n -r -o SIZE "$device")
+#   block_devices+=("$device" "$device_size")
+#  done
+#  echo $device
+#  check_mountpoints
+#  while true; do
+#    PARTITION_LAYOUT=$(dialog --title "Partition the Disks" \
+#      --cancel-label "Exit to Menu" \
+#      --menu "The installer will now automatically partition a disk for you. \
+#If you have no preference or are unsure about which partition layout to \
+#choose, the 'Basic' layout is the simplest and should be enough for most use \
+#cases.\n\nPartition layout:" 14 80 3 \
+#"Basic" "Use entire disk" \
+#"LVM" "Use entire disk and set up LVM" \
+#"Encrypted" "Use entire disk and set up encrypted LVM" 3>&1 1>&2 2>&3)
+#
+#    if [ $? -eq 0 ]; then
+#      DISK=$(dialog --title "Set the Installation Disk" --cancel-label "Back" \
+#        --menu "Select the disk for Arch Linux to be installed on. Note that \
+#the disk you select will be erased, but not until you have confirmed the \
+#changes.\n\nDisk to partition:" 16 55 5 \
+#"${block_devices[@]}" 3>&1 1>&2 2>&3)
+#
+#      if [ $? -eq 0 ]; then
+#        # NVME devices use nvme0n1p1, p2, p3 etc. for partition naming
+#        # TODO: May need to be modified to support installing on other block
+#        # devices (SD cards, USB?)
+#        PREFIX=""
+#        if [[ "$DISK" == *"nvme"* ]]; then
+#          PREFIX="p"
+#        fi
+#
+#        FILE_SYSTEM=$(dialog --title "Set the Filesystem for $DISK_ROOT" \
+#          --nocancel --menu "Select the type of filesystem to use for the \
+#specified device. If you are unsure, 'ext4' is the default.\n\nFilesystem \
+#type:" 15 68 5 \
+#"ext4" "Ext4 journaling filesystem" \
+#"ext3" "Ext3 journaling filesystem" \
+#"ext2" "Standard Linux Ext2 filesystem" \
+#"btrfs" "Btrfs Copy-on-Write B-tree filesystem" \
+#"xfs" "SGI's journaling filesystem" 3>&1 1>&2 2>&3)
+#
+#        dialog --title "Create a Swap Partition" \
+#          --yesno "Would you like to create an optional swap partition? If \
+#you are unsure, it is recommended to create one." 6 57
+#        if [ $? -eq 0 ]; then
+#          # Get the amount of RAM in the system to use as default swap size
+#          mem_total=$(free --giga | awk '/^Mem:/{print $2}')
+#          if [ "$mem_total" != "0" ]; then
+#            mem_total="${mem_total}G"
+#          else
+#            mem_total=$(free --mega | awk '/^Mem:/{print $2}')
+#            mem_total="${mem_total}M"
+#          fi
 
-    if [ $? -eq 0 ]; then
-      DISK=$(dialog --title "Set the Installation Disk" --cancel-label "Back" \
-        --menu "Select the disk for Arch Linux to be installed on. Note that \
-the disk you select will be erased, but not until you have confirmed the \
-changes.\n\nDisk to partition:" 16 55 5 \
-"${block_devices[@]}" 3>&1 1>&2 2>&3)
+#          while true; do
+#            SWAP=$(dialog --title "Allocate Swap Space" \
+#              --inputbox "Specify how much swap space to allocate. If you are \
+#unsure, the default is to have swap space equal to the amount of RAM in your \
+#system.\n\nSwap partition size (use 'M' for MiB or 'G' for GiB):" 11 80 \
+#"$mem_total" 3>&1 1>&2 2>&3)
+#
+#           if [ $? -eq 0 ]; then
+#              disk_size_bytes=$(lsblk -b -d -n -o SIZE "$DISK")
+#              disk_size_mibs=$((disk_size_bytes/1024/1024))
+#              disk_size_gibs=$((disk_size_mibs/1024))
+#              swap_size=$(printf "%s" "$SWAP" | tr -c -d '[:digit:]')
+#
+#              # Input validation for swap size
+#              if printf "%s" "$SWAP" | grep -Eoq "^[0-9]+[MG]$" \
+#                && [ "${swap_size:0:1}" != "0" ]; then
+#                if [ "${SWAP: -1}" = "M" ] \
+#                  && [ "$swap_size" -lt $((disk_size_mibs - 2048)) ]; then
+#                  swap_enabled=true
+#                  break
+#                elif [ "${SWAP: -1}" = "G" ] \
+#                  && [ "$swap_size" -lt $((disk_size_gibs - 2)) ]; then
+#                  swap_enabled=true
+#                  break
+#                else
+#                  dialog --title "ERROR: Not Enough Disk Space" \
+#                    --msgbox "The amount you entered exceeds the amount of \
+#space available on the disk. Note that the installer sets aside an additional \
+#2 GiB to have enough space for the base installation." 8 60
+#                fi
+#              else
+#                dialog --title "ERROR: Invalid Format" \
+#                  --msgbox "You entered an invalid format. Make sure to use \
+#'M' for 'MiB' or 'G' for 'GiB'." 6 60
+#              fi
+#            else
+#              break
+#            fi
+#          done
+#       fi
 
-      if [ $? -eq 0 ]; then
-        # NVME devices use nvme0n1p1, p2, p3 etc. for partition naming
-        # TODO: May need to be modified to support installing on other block
-        # devices (SD cards, USB?)
-        PREFIX=""
-        if [[ "$DISK" == *"nvme"* ]]; then
-          PREFIX="p"
-        fi
-
-        FILE_SYSTEM=$(dialog --title "Set the Filesystem for $DISK_ROOT" \
-          --nocancel --menu "Select the type of filesystem to use for the \
-specified device. If you are unsure, 'ext4' is the default.\n\nFilesystem \
-type:" 15 68 5 \
-"ext4" "Ext4 journaling filesystem" \
-"ext3" "Ext3 journaling filesystem" \
-"ext2" "Standard Linux Ext2 filesystem" \
-"btrfs" "Btrfs Copy-on-Write B-tree filesystem" \
-"xfs" "SGI's journaling filesystem" 3>&1 1>&2 2>&3)
-
-        dialog --title "Create a Swap Partition" \
-          --yesno "Would you like to create an optional swap partition? If \
-you are unsure, it is recommended to create one." 6 57
-        if [ $? -eq 0 ]; then
-          # Get the amount of RAM in the system to use as default swap size
-          mem_total=$(free --giga | awk '/^Mem:/{print $2}')
-          if [ "$mem_total" != "0" ]; then
-            mem_total="${mem_total}G"
-          else
-            mem_total=$(free --mega | awk '/^Mem:/{print $2}')
-            mem_total="${mem_total}M"
-          fi
-
-          while true; do
-            SWAP=$(dialog --title "Allocate Swap Space" \
-              --inputbox "Specify how much swap space to allocate. If you are \
-unsure, the default is to have swap space equal to the amount of RAM in your \
-system.\n\nSwap partition size (use 'M' for MiB or 'G' for GiB):" 11 80 \
-"$mem_total" 3>&1 1>&2 2>&3)
-
-            if [ $? -eq 0 ]; then
-              disk_size_bytes=$(lsblk -b -d -n -o SIZE "$DISK")
-              disk_size_mibs=$((disk_size_bytes/1024/1024))
-              disk_size_gibs=$((disk_size_mibs/1024))
-              swap_size=$(printf "%s" "$SWAP" | tr -c -d '[:digit:]')
-
-              # Input validation for swap size
-              if printf "%s" "$SWAP" | grep -Eoq "^[0-9]+[MG]$" \
-                && [ "${swap_size:0:1}" != "0" ]; then
-                if [ "${SWAP: -1}" = "M" ] \
-                  && [ "$swap_size" -lt $((disk_size_mibs - 2048)) ]; then
-                  swap_enabled=true
-                  break
-                elif [ "${SWAP: -1}" = "G" ] \
-                  && [ "$swap_size" -lt $((disk_size_gibs - 2)) ]; then
-                  swap_enabled=true
-                  break
-                else
-                  dialog --title "ERROR: Not Enough Disk Space" \
-                    --msgbox "The amount you entered exceeds the amount of \
-space available on the disk. Note that the installer sets aside an additional \
-2 GiB to have enough space for the base installation." 8 60
-                fi
-              else
-                dialog --title "ERROR: Invalid Format" \
-                  --msgbox "You entered an invalid format. Make sure to use \
-'M' for 'MiB' or 'G' for 'GiB'." 6 60
-              fi
-            else
-              break
-            fi
-          done
-        fi
-
-        dialog --title "Confirm the Partition Layout for $DISK" --defaultno \
-          --yesno "WARNING: All data on the selected disk will be lost! Make \
-sure to review your changes before continuing.\n\nDisk to partition: \
-$DISK\nPartition layout: $PARTITION_LAYOUT\nFilesystem type: \
-$FILE_SYSTEM\nSwap size: $SWAP\n\nAre you sure you want to write the \
-changes to the disk?" 13 60
-        if [ $? -eq 0 ]; then
-          check_lvm_status
-          dialog --infobox "Formatting $DISK..." 3 50
-          sgdisk --zap-all "$DISK" &> /dev/null
-          wipefs -a "$DISK" &> /dev/null
-          dialog --infobox "Partitioning $DISK..." 3 50
-          create_partition_label
-          case "$PARTITION_LAYOUT" in
-            "Basic") create_basic_layout ;;
-            "LVM") create_lvm_layout ;;
-            "Encrypted") create_encrypted_layout ;;
-          esac
-          break
-        else
-          main_menu
-        fi
-      fi
-    else
-      main_menu
-    fi
-  done
-}
+#        dialog --title "Confirm the Partition Layout for $DISK" --defaultno \
+#          --yesno "WARNING: All data on the selected disk will be lost! Make \
+#sure to review your changes before continuing.\n\nDisk to partition: \
+#$DISK\nPartition layout: $PARTITION_LAYOUT\nFilesystem type: \
+#$FILE_SYSTEM\nSwap size: $SWAP\n\nAre you sure you want to write the \
+#changes to the disk?" 13 60
+#        if [ $? -eq 0 ]; then
+#          check_lvm_status
+#          dialog --infobox "Formatting $DISK..." 3 50
+#          sgdisk --zap-all "$DISK" &> /dev/null
+#          wipefs -a "$DISK" &> /dev/null
+#          dialog --infobox "Partitioning $DISK..." 3 50
+#          create_partition_label
+#          case "$PARTITION_LAYOUT" in
+#            "Basic") create_basic_layout ;;
+#            "LVM") create_lvm_layout ;;
+#            "Encrypted") create_encrypted_layout ;;
+#          esac
+#          break
+#        else
+#          main_menu
+#        fi
+#      fi
+#    else
+#      main_menu
+#    fi
+#  done
+#}
 
 # Create a new partition label on the selected disk
 create_partition_label() {
