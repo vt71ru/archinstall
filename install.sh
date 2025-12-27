@@ -2,7 +2,7 @@
 # Main script for the installation
 
 # fonts color
-#Green="\\033[32m"
+Green="\\033[32m"
 #Red="\\033[31m"
 #GreenBG="\\033[42;37m"
 #RedBG="\\033[41;37m"
@@ -10,8 +10,8 @@
 #Green_font_prefix="\\033[32m"
 #Green_background_prefix="\\033[42;37m"
 #Font_color_suffix="\\033[0m"
-
-#echo -e "${Green}Begin........"
+DISK=''
+echo -e "${Green}Begin........"
 ################
 ## CONFIGURE THESE VARIABLES
 ################
@@ -362,11 +362,46 @@ than 32 characters long." 9 80
 
 # Prepare the user's selected disk for partitioning
 prepare_disk() {
+DISK=$(dialog --title "Set the Installation Disk" --cancel-label "Back" \
+        --menu "Select the disk for Arch Linux to be installed on. Note that \
+               the disk you select will be erased, but not until you have confirmed the \
+               changes.\n\nDisk to partition:" 16 55 5 \
+"${block_devices[@]}" 3>&1 1>&2 2>&3)
+
+      if [ $? -eq 0 ]; then
+        # NVME devices use nvme0n1p1, p2, p3 etc. for partition naming
+        # TODO: May need to be modified to support installing on other block
+        # devices (SD cards, USB?)
+        PREFIX=""
+        if [[ "$DISK" == *"nvme"* ]]; then
+          PREFIX="p"
+        fi
+
 METHOD_PART=$(dialog --title "Partition the Disks" \
             --menu "select a disk partitioning method" 14 80 3 \
             "Automatic partition" "Automatic method" \
             "Manual partition" "Manual method" \
             "Pre-mounted" "pre-created partition" 3>&1 1>&2 2>&3)
+case $METHOD_PART in
+    1 )
+      cd "$1"
+      result=$(ls -lt)
+      display_file_details "$result" 
+      cd ..
+    ;;
+    2 )
+      cd "$1"
+      result=$(ls -lt)
+      display_file_details "$result" 
+      cd ..
+    ;;
+    3 )
+      cd "$1"
+      result=$(ls -lt)
+      display_file_details "$result" 
+      cd ..
+    ;;
+esac
 #  SWAP="-"
 #  swap_enabled=false
 #  block_devices=()
