@@ -32,51 +32,145 @@ confirm_install()
         "$TARGET_DISK"
 
     printf "%-20s %s\n" \
-        "Режим загрузки:" \
+        "Загрузка:" \
         "$BOOT_MODE"
 
     printf "%-20s %s\n" \
         "Разметка:" \
         "$PARTITION_METHOD"
 
-    if [[ -n "${EFI_PARTITION:-}" ]]; then
-        printf "%-20s %s\n" \
-            "EFI раздел:" \
-            "$EFI_PARTITION"
-    fi
+    printf "%-20s %s\n" \
+        "Root:" \
+        "${ROOT_PARTITION:-не задан}"
 
-    if [[ -n "${ROOT_PARTITION:-}" ]]; then
-        printf "%-20s %s\n" \
-            "Root раздел:" \
-            "$ROOT_PARTITION"
-    fi
-
-    if [[ -n "${SWAP_PARTITION:-}" ]]; then
-        printf "%-20s %s\n" \
-            "Swap раздел:" \
-            "$SWAP_PARTITION"
-    fi
-
-    echo
-
-    echo "Будут выполнены следующие действия:"
-    echo
-    echo " - Форматирование разделов"
-    echo " - Монтирование файловых систем"
-    echo " - Установка базовой системы Arch Linux"
-    echo " - Настройка загрузчика"
-    echo " - Создание пользователя"
+    printf "%-20s %s\n" \
+        "EFI:" \
+        "${EFI_PARTITION:-нет}"
 
     echo
 
     read -rp \
-        "Начать установку? Введите YES для продолжения: " answer
+        "Начать установку? Введите YES: " answer
 
-    if [[ "$answer" != "YES" ]]; then
-        die "Установка отменена пользователем"
-    fi
+    [[ "$answer" == "YES" ]] \
+        || die "Установка отменена"
 
     export INSTALL_CONFIRMED=1
 
     msg_success "Установка подтверждена"
+}
+
+########################################
+# Format partitions
+########################################
+
+format_partitions()
+{
+    section "Форматирование разделов"
+
+    [[ -n "${ROOT_PARTITION:-}" ]] \
+        || die "Root раздел не определён"
+
+    mkfs.ext4 \
+        -F \
+        "$ROOT_PARTITION"
+
+    if [[ "$BOOT_MODE" == "uefi" ]]; then
+
+        [[ -n "${EFI_PARTITION:-}" ]] \
+            || die "EFI раздел не определён"
+
+        mkfs.fat \
+            -F32 \
+            "$EFI_PARTITION"
+
+    fi
+
+    msg_success "Разделы отформатированы"
+}
+
+########################################
+# Mount partitions
+########################################
+
+mount_partitions()
+{
+    section "Монтирование разделов"
+
+    mkdir -p /mnt
+
+    mount \
+        "$ROOT_PARTITION" \
+        /mnt
+
+    if [[ "$BOOT_MODE" == "uefi" ]]; then
+
+        mkdir -p /mnt/boot
+
+        mount \
+            "$EFI_PARTITION" \
+            /mnt/boot
+
+    fi
+
+    msg_success "Разделы смонтированы"
+}
+
+########################################
+# Install base system
+########################################
+
+install_base_system()
+{
+    section "Установка базовой системы"
+
+    pacstrap \
+        -K \
+        /mnt \
+        base \
+        linux \
+        linux-firmware \
+        networkmanager \
+        sudo \
+        nano
+
+    msg_success "Базовая система установлена"
+}
+
+########################################
+# Generate fstab
+########################################
+
+generate_fstab()
+{
+    section "Создание fstab"
+
+    genfstab \
+        -U \
+        /mnt \
+        >> /mnt/etc/fstab
+
+    msg_success "fstab создан"
+}
+
+########################################
+# Installation workflow
+########################################
+
+install_system()
+{
+    section "Установка Arch Linux"
+
+    [[ "${INSTALL_CONFIRMED:-0}" == "1" ]] \
+        || die "Установка не подтверждена"
+
+    format_partitions
+
+    mount_partitions
+
+    install_base_system
+
+    generate_fstab
+
+    msg_success "Установка базовой системы завершена"
 }
