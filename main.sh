@@ -183,7 +183,8 @@ check_functions()
         select_locales
         select_disk
         select_partition_method
-        confirm_install
+        prepare_partitions
+        confirm_install 
         install_system
         finish_installation
     )
