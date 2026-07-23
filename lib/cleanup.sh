@@ -5,19 +5,14 @@
 #
 
 ########################################
-# Очистка временных ресурсов
+# Размонтирование
 ########################################
 
 cleanup_mounts()
 {
-    local mounts=(
-        /mnt/boot
-        /mnt
-    )
-
     local mount
 
-    for mount in "${mounts[@]}"; do
+    for mount in /mnt/boot /mnt; do
         if mountpoint -q "$mount" 2>/dev/null; then
             umount -R "$mount"
             msg_info "Размонтировано: $mount"
@@ -26,7 +21,7 @@ cleanup_mounts()
 }
 
 ########################################
-# Очистка при ошибке
+# Ошибка
 ########################################
 
 cleanup_error()
@@ -34,26 +29,23 @@ cleanup_error()
     local code="$1"
     local command="$2"
 
-    msg_error "Ошибка выполнения"
+    msg_error "Ошибка: $command"
     msg_error "Код: $code"
-    msg_error "Команда: $command"
 
     cleanup_mounts
 }
 
 ########################################
-# Очистка после завершения
+# Завершение
 ########################################
 
 cleanup_finish()
 {
-    msg_info "Очистка завершена"
-
     cleanup_mounts
 }
 
 ########################################
-# Основная функция очистки
+# Основная очистка
 ########################################
 
 cleanup()
