@@ -1,110 +1,72 @@
 #!/usr/bin/env bash
+#
+# ArchInstaller
+# Language module
+#
 
 ########################################
-# Installer language selection
+# Доступные языки
 ########################################
 
-INSTALL_LANG=""
-LANG_FILE=""
+readonly LANGUAGES=(
+    "English"
+    "Русский"
+)
+
+readonly LANGUAGE_FILES=(
+    "en.sh"
+    "ru.sh"
+)
 
 ########################################
-# Select language
+# Выбор языка
 ########################################
 
 select_language()
 {
-    echo
-    echo "========================================"
-    echo " ArchInstaller"
-    echo " Installer language selection"
-    echo " Выбор языка установщика"
-    echo "========================================"
-    echo
+    section "Выбор языка"
 
-    echo " 1) English"
-    echo " 2) Русский"
-    echo " 3) Deutsch"
-    echo " 4) Français"
-    echo " 5) Español"
-    echo " 6) Italiano"
-    echo " 7) Polski"
-    echo " 8) Português"
-    echo
+    menu_select \
+        "Выберите язык установщика" \
+        "${LANGUAGES[@]}"
 
-    while true; do
-        read -rp "Select language [1-8]: " choice
+    LANGUAGE_FILE="${LANGUAGE_FILES[$((REPLY-1))]}"
 
-        case "$choice" in
-            1)
-                INSTALL_LANG="english"
-                break
-                ;;
-            2)
-                INSTALL_LANG="russian"
-                break
-                ;;
-            3)
-                INSTALL_LANG="german"
-                break
-                ;;
-            4)
-                INSTALL_LANG="french"
-                break
-                ;;
-            5)
-                INSTALL_LANG="spanish"
-                break
-                ;;
-            6)
-                INSTALL_LANG="italian"
-                break
-                ;;
-            7)
-                INSTALL_LANG="polish"
-                break
-                ;;
-            8)
-                INSTALL_LANG="portuguese"
-                break
-                ;;
-            *)
-                echo "Invalid choice. Try again."
-                ;;
-        esac
-    done
+    export LANGUAGE_FILE
 
-    LANG_FILE="${LANG_DIR}/${INSTALL_LANG}.conf"
-
-    export INSTALL_LANG
-    export LANG_FILE
-
-    echo
-    echo "Selected language: ${INSTALL_LANG}"
-
-    if [[ ! -f "$LANG_FILE" ]]; then
-        echo "[WARN] Language file not found:"
-        echo "       $LANG_FILE"
-    fi
+    msg_success "Выбран язык: ${LANGUAGES[$((REPLY-1))]}"
 }
 
 ########################################
-# Load language file
+# Загрузка словаря
 ########################################
 
 load_language()
 {
-    if [[ -z "${LANG_FILE}" ]]; then
-        echo "[ERROR] Language not selected"
+    local file="${LANG_DIR}/${LANGUAGE_FILE}"
+
+    if [[ ! -f "$file" ]]; then
+        msg_error "Языковой файл не найден: $file"
         return 1
     fi
 
-    if [[ ! -f "$LANG_FILE" ]]; then
-        echo "[WARN] Using default language"
-        return 0
-    fi
-
     # shellcheck source=/dev/null
-    source "$LANG_FILE"
+    source "$file"
 
-    echo "Language loaded: ${LANG_FILE}"
+    msg_success "Загружен словарь: ${LANGUAGE_FILE}"
+}
+
+########################################
+# Получение перевода
+########################################
+
+lang()
+{
+    local key="$1"
+
+    if [[ -n "${!key:-}" ]]; then
+        printf '%s\n' "${!key}"
+    else
+        printf '%s\n' "$key"
+    fi
 }
