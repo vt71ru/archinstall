@@ -1,46 +1,147 @@
 #!/usr/bin/env bash
 #
 # ArchInstaller
-# Environment Validation Module
+# Validation module
 #
 
-# Глобальные переменные состояния среды (будут доступны другим модулям)
-IS_EFI=0
-SYS_ARCH=""
-
 ########################################
-# Обязательные функции для каркаса
+# Проверка root
 ########################################
 
-# Проверяет архитектуру, режим загрузки и базовые лимиты системы
-validate_environment() {
-    msg_step "Проверка аппаратного окружения"
-
-    # 1. Проверка архитектуры процессора
-    SYS_ARCH="$(uname -m)"
-    if [[ "$SYS_ARCH" != "x86_64" ]]; then
-        die "Arch Linux официально поддерживает только архитектуру x86_64. Ваша система: $SYS_ARCH"
+check_root()
+{
+    if [[ "$EUID" -ne 0 ]]; then
+        msg_error "Установщик должен быть запущен от root"
+        return 1
     fi
-    msg_success "Архитектура процессора: x86_64"
 
-    # 2. Проверка режима загрузки (UEFI или Legacy BIOS)
-    if [[ -d "/sys/firmware/efi/efivars" ]]; then
-        IS_EFI=1
-        msg_success "Режим загрузки: UEFI (рекомендуемый)"
+    msg_success "Права root подтверждены"
+}
+
+########################################
+# Проверка Arch окружения
+########################################
+
+check_arch_environment()
+{
+    if [[ ! -f /etc/arch-release ]]; then
+        msg_warning "Система не определена как Arch Linux"
+        return 1
+    fi
+
+    msg_success "Arch Linux окружение обнаружено"
+}
+
+########################################
+# Проверка виртуальных файловых систем
+########################################
+
+check_system_mounts()
+{
+    local mounts=(
+        /proc
+        /sys
+        /dev
+    )
+
+    local mount
+
+    for mount in "${mounts[@]}"; do
+        if [[ ! -d "$mount" ]]; then
+            msg_error "Отсутствует: $mount"
+            return 1
+        fi
+    done
+
+    msg_success "Системные каталоги доступны"
+}
+
+
+########################################
+# Проверка памяти
+########################################
+
+check_memory()
+{
+    local memory
+
+    memory=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
+
+    if (( memory < 512 )); then
+        msg_warning "Мало оперативной памяти: ${memory} MB"
     else
-        IS_EFI=0
-        msg_warn "Режим загрузки: Legacy BIOS (устаревший)"
+        msg_success "Память: ${memory} MB"
     fi
-    export IS_EFI
+}
 
-    # 3. Проверка объема оперативной памяти (минимум 1 ГБ для стабильной работы pacman)
-    local total_mem_kb
-    total_mem_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
-    local total_mem_mb=$(( total_mem_kb / 1024 ))
 
-    if (( total_mem_mb < 1024 )); then
-        msg_warn "Обнаружено мало оперативной памяти: ${total_mem_mb}MB. Возможны сбои при сборке пакетов."
+########################################
+# Проверка режима загрузки
+########################################
+
+check_boot_mode()
+{
+    if [[ -d /sys/firmware/efi ]]; then
+        BOOT_MODE="UEFI"
     else
-        msg_success "Объем оперативной памяти: ${total_mem_mb}MB"
+        BOOT_MODE="BIOS"
     fi
+
+    export BOOT_MODE
+
+    msg_info "Режим загрузки: ${BOOT_MODE}"
+}
+
+
+########################################
+# Проверка команд установки
+########################################
+
+check_installer_tools()
+{
+    local tools=(
+        pacstrap
+        arch-chroot
+        genfstab
+        lsblk
+        fdisk
+    )
+
+    local tool
+
+    for tool in "${tools[@]}"; do
+        if ! command -v "$tool" >/dev/null 2>&1; then
+            msg_error "Инструмент отсутствует: $tool"
+            return 1
+        fi
+    done
+
+    msg_success "Инструменты установки доступны"
+}
+
+########################################
+# Общая проверка окружения
+########################################
+
+validate_environment()
+{
+    section "Проверка окружения"
+
+    check_root \
+        || return 1
+
+    check_arch_environment \
+        || return 1
+
+    check_system_mounts \
+        || return 1
+
+    check_memory
+
+    check_boot_mode
+
+    check_installer_tools \
+        || return 1
+
+    msg_success "Окружение готово к установке"
 }
