@@ -39,9 +39,13 @@ select_language()
     [[ -n "${LANGUAGE_FILES[$index]:-}" ]] \
         || die "Некорректный выбор языка"
 
+
     LANGUAGE_FILE="${LANGUAGE_FILES[$index]}"
-    source "${LANG_DIR}/${LANGUAGE_FILE}"
-    msg_success "Выбран язык: ${LANGUAGES[$index]}"
+
+    export LANGUAGE_FILE
+
+
+    echo "Выбран язык: ${LANGUAGES[$index]}"
 }
 
 ########################################
@@ -55,13 +59,17 @@ load_language()
     [[ -n "${LANGUAGE_FILE:-}" ]] \
         || die "Язык не выбран"
 
+
     file="${LANG_DIR}/${LANGUAGE_FILE}"
+
 
     [[ -f "$file" ]] \
         || die "Файл языка отсутствует: $file"
 
+
     # shellcheck disable=SC1090
     source "$file"
+
 
     msg_success "Язык загружен: $LANGUAGE_FILE"
 }
