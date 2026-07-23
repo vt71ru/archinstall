@@ -40,10 +40,7 @@ select_language()
         || die "Некорректный выбор языка"
 
     LANGUAGE_FILE="${LANGUAGE_FILES[$index]}"
-
-    export LANGUAGE_FILE
-
-
+    source "${LANG_DIR}/${LANGUAGE_FILE}"
     msg_success "Выбран язык: ${LANGUAGES[$index]}"
 }
 
