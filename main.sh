@@ -280,6 +280,8 @@ main()
 
     select_partition_method
 
+    prepare_partitions
+
     confirm_install
 
     install_system
