@@ -174,3 +174,53 @@ install_system()
 
     msg_success "Установка базовой системы завершена"
 }
+
+########################################
+# Finish installation
+########################################
+
+finish_installation()
+{
+    section "Завершение установки"
+
+    if mountpoint -q /mnt; then
+
+        msg_info "Отмонтирование файловых систем"
+
+        sync
+
+        umount -R /mnt \
+            || msg_warning "Не все разделы удалось отмонтировать"
+
+    fi
+
+    echo
+
+    msg_success "Установка завершена"
+
+    echo
+    echo "Система Arch Linux установлена."
+    echo
+    echo "Следующие шаги:"
+    echo
+    echo "1. Извлеките установочный носитель"
+    echo "2. Перезагрузите компьютер"
+    echo
+
+    read -rp \
+        "Перезагрузить систему сейчас? [yes/no]: " answer
+
+    case "$answer" in
+
+        yes|YES|y|Y)
+            reboot
+            ;;
+
+        *)
+            echo
+            echo "Перезагрузка отменена."
+            echo "Выполните reboot вручную."
+            ;;
+
+    esac
+}
