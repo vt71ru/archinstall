@@ -269,7 +269,7 @@ main()
 
     select_language
 
-    load_language
+    #load_language
 
     validate_environment
 
