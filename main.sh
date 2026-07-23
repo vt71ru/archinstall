@@ -55,7 +55,7 @@ readonly MODULES=(
 )
 
 ########################################
-# Required commands
+# Commands
 ########################################
 
 readonly COMMANDS=(
@@ -79,7 +79,7 @@ die()
 }
 
 ########################################
-# Project check
+# Project validation
 ########################################
 
 check_project()
@@ -95,7 +95,7 @@ check_project()
 }
 
 ########################################
-# Load config
+# Configuration
 ########################################
 
 load_config()
@@ -105,35 +105,7 @@ load_config()
 }
 
 ########################################
-# Check modules
-########################################
-
-check_modules()
-{
-    local module
-    local file
-
-    section "Проверка модулей"
-
-    for module in "${MODULES[@]}"; do
-        file="${LIB_DIR}/${module}.sh"
-
-        if [[ ! -f "$file" ]]; then
-            msg_error "Отсутствует модуль: $module"
-            return 1
-        fi
-
-        if [[ ! -r "$file" ]]; then
-            msg_error "Нет доступа к модулю: $module"
-            return 1
-        fi
-
-        msg_success "$module"
-    done
-}
-
-########################################
-# Load modules
+# Module loading
 ########################################
 
 load_modules()
@@ -146,6 +118,9 @@ load_modules()
     for module in "${MODULES[@]}"; do
         file="${LIB_DIR}/${module}.sh"
 
+        [[ -r "$file" ]] \
+            || die "Модуль отсутствует: $module"
+
         # shellcheck source=/dev/null
         source "$file"
 
@@ -154,35 +129,7 @@ load_modules()
 }
 
 ########################################
-# Module list
-########################################
-
-modules_list()
-{
-    section "Активные модули"
-
-    local module
-
-    for module in "${MODULES[@]}"; do
-        echo -e "${GREEN}[ OK ]${RESET} ${module}"
-    done
-
-    echo
-}
-
-########################################
-# Bash version
-########################################
-
-check_bash()
-{
-    if (( BASH_VERSINFO[0] < 5 )); then
-        die "Требуется Bash версии 5 или выше"
-    fi
-}
-
-########################################
-# Commands check
+# Command validation
 ########################################
 
 check_commands()
@@ -192,27 +139,25 @@ check_commands()
     section "Проверка команд"
 
     for cmd in "${COMMANDS[@]}"; do
-        if ! command -v "$cmd" >/dev/null 2>&1; then
-            msg_error "Команда отсутствует: $cmd"
-            return 1
-        fi
+        command -v "$cmd" >/dev/null 2>&1 \
+            || die "Команда отсутствует: $cmd"
 
         msg_success "$cmd"
     done
 }
 
 ########################################
-# Functions check
+# Required functions
 ########################################
 
 check_functions()
 {
     local required=(
         logo_show
-        check_root
         validate_environment
         check_network
         select_language
+        load_language
         select_locales
         select_disk
         select_partition_method
@@ -226,17 +171,15 @@ check_functions()
     section "Проверка функций"
 
     for func in "${required[@]}"; do
-        if ! declare -f "$func" >/dev/null; then
-            msg_error "Функция отсутствует: $func"
-            return 1
-        fi
-
-        msg_success "$func"
+        declare -f "$func" >/dev/null \
+            || die "Функция отсутствует: $func"
     done
+
+    msg_success "Все функции доступны"
 }
 
 ########################################
-# Traps
+# Signal handlers
 ########################################
 
 install_traps()
@@ -258,19 +201,17 @@ bootstrap()
     echo "${APP_NAME} ${APP_VERSION}"
     echo
 
-    check_bash
     check_project
-    load_config
-    check_modules
-    load_modules
-    modules_list
-    check_commands
-    check_functions
-    install_traps
 
-    if declare -f init_logging >/dev/null; then
-        init_logging
-    fi
+    load_config
+
+    load_modules
+
+    check_commands
+
+    check_functions
+
+    install_traps
 }
 
 ########################################
@@ -285,13 +226,9 @@ main()
 
     logo_show
 
-    check_root
-
     select_language
 
-    if declare -f load_language >/dev/null; then
-        load_language
-    fi
+    load_language
 
     validate_environment
 
