@@ -55,7 +55,7 @@ readonly MODULES=(
 )
 
 ########################################
-# Commands
+# Required commands
 ########################################
 
 readonly COMMANDS=(
@@ -64,6 +64,7 @@ readonly COMMANDS=(
     sed
     grep
     lsblk
+    ip
 )
 
 ########################################
@@ -73,68 +74,66 @@ readonly COMMANDS=(
 die()
 {
     echo
-    echo "[ERROR] $*" >&2
+    msg_error "$*"
     exit 1
 }
 
 ########################################
-# Project validation
+# Project check
 ########################################
 
 check_project()
 {
     [[ -d "$LIB_DIR" ]] \
-        || die "Library directory missing: $LIB_DIR"
+        || die "Каталог модулей отсутствует: $LIB_DIR"
 
     [[ -d "$LANG_DIR" ]] \
-        || die "Language directory missing: $LANG_DIR"
+        || die "Каталог языков отсутствует: $LANG_DIR"
 
     [[ -f "$CONFIG_FILE" ]] \
-        || die "Config file missing: $CONFIG_FILE"
+        || die "Файл конфигурации отсутствует: $CONFIG_FILE"
 }
 
 ########################################
-# Configuration
+# Load config
 ########################################
 
 load_config()
 {
-    echo "[LOAD] config"
-
     # shellcheck source=/dev/null
     source "$CONFIG_FILE"
 }
 
 ########################################
-# Module validation
+# Check modules
 ########################################
 
 check_modules()
 {
-    local missing=0
     local module
     local file
+
+    section "Проверка модулей"
 
     for module in "${MODULES[@]}"; do
         file="${LIB_DIR}/${module}.sh"
 
         if [[ ! -f "$file" ]]; then
-            echo "[MISSING] $file"
-            ((missing++))
-            continue
+            msg_error "Отсутствует модуль: $module"
+            return 1
         fi
 
         if [[ ! -r "$file" ]]; then
-            echo "[UNREADABLE] $file"
-            ((missing++))
+            msg_error "Нет доступа к модулю: $module"
+            return 1
         fi
-    done
 
-    (( missing == 0 )) \
-        || die "Module check failed"
+        msg_success "$module"
+    done
 }
+
 ########################################
-# Module loading
+# Load modules
 ########################################
 
 load_modules()
@@ -142,44 +141,68 @@ load_modules()
     local module
     local file
 
+    section "Загрузка модулей"
+
     for module in "${MODULES[@]}"; do
         file="${LIB_DIR}/${module}.sh"
 
-        echo "[LOAD] ${module}"
-
         # shellcheck source=/dev/null
         source "$file"
+
+        msg_success "$module"
     done
 }
 
 ########################################
-# Bash version check
+# Module list
+########################################
+
+modules_list()
+{
+    section "Активные модули"
+
+    local module
+
+    for module in "${MODULES[@]}"; do
+        echo -e "${GREEN}[ OK ]${RESET} ${module}"
+    done
+
+    echo
+}
+
+########################################
+# Bash version
 ########################################
 
 check_bash()
 {
     if (( BASH_VERSINFO[0] < 5 )); then
-        die "Bash 5+ required"
+        die "Требуется Bash версии 5 или выше"
     fi
 }
 
 ########################################
-# External commands check
+# Commands check
 ########################################
 
 check_commands()
 {
     local cmd
 
+    section "Проверка команд"
+
     for cmd in "${COMMANDS[@]}"; do
         if ! command -v "$cmd" >/dev/null 2>&1; then
-            die "Command missing: $cmd"
+            msg_error "Команда отсутствует: $cmd"
+            return 1
         fi
+
+        msg_success "$cmd"
     done
 }
 
 ########################################
-# Required functions check
+# Functions check
 ########################################
 
 check_functions()
@@ -200,15 +223,20 @@ check_functions()
 
     local func
 
+    section "Проверка функций"
+
     for func in "${required[@]}"; do
         if ! declare -f "$func" >/dev/null; then
-            die "Function missing: $func"
+            msg_error "Функция отсутствует: $func"
+            return 1
         fi
+
+        msg_success "$func"
     done
 }
 
 ########################################
-# Signal handlers
+# Traps
 ########################################
 
 install_traps()
@@ -231,25 +259,20 @@ bootstrap()
     echo
 
     check_bash
-
     check_project
-
     load_config
-
     check_modules
-
     load_modules
-
+    modules_list
     check_commands
-
     check_functions
-
     install_traps
 
     if declare -f init_logging >/dev/null; then
         init_logging
     fi
 }
+
 ########################################
 # Main workflow
 ########################################
@@ -258,14 +281,14 @@ main()
 {
     bootstrap
 
+    ui_clear
+
     logo_show
 
     check_root
 
-# Installer language
     select_language
 
-# Load selected language dictionary
     if declare -f load_language >/dev/null; then
         load_language
     fi
