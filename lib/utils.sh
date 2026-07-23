@@ -23,23 +23,6 @@ is_set()
 }
 
 ########################################
-# Ожидание процесса
-########################################
-
-wait_for()
-{
-    local pid="$1"
-    local message="${2:-Ожидание}"
-
-    while kill -0 "$pid" >/dev/null 2>&1; do
-        progress "$message"
-        sleep 1
-    done
-
-    progress_done
-}
-
-########################################
 # Выполнение команды
 ########################################
 
@@ -55,7 +38,7 @@ run_command()
         return 0
     fi
 
-    msg_error "Ошибка: $message"
+    msg_error "$message"
     return 1
 }
 
@@ -83,15 +66,11 @@ directory_exists()
 
 ensure_directory()
 {
-    local directory="$1"
-
-    if [[ ! -d "$directory" ]]; then
-        mkdir -p "$directory"
-    fi
+    mkdir -p "$1"
 }
 
 ########################################
-# Ввод значения
+# Ввод данных
 ########################################
 
 ask_input()
@@ -112,29 +91,12 @@ is_number()
 }
 
 ########################################
-# Формат размера
-########################################
-
-human_size()
-{
-    local size="$1"
-
-    if command_exists numfmt; then
-        numfmt --to=iec "$size"
-    else
-        echo "${size} bytes"
-    fi
-}
-
-########################################
-# Проверка хоста
+# Проверка сети
 ########################################
 
 host_available()
 {
-    local host="$1"
-
-    ping -c 1 -W 3 "$host" >/dev/null 2>&1
+    ping -c 1 -W 3 "$1" >/dev/null 2>&1
 }
 
 ########################################
