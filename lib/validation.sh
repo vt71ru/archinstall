@@ -11,7 +11,7 @@
 check_root()
 {
     if [[ "$EUID" -ne 0 ]]; then
-        msg_error "Установщик должен быть запущен от root"
+        msg_error "Запустите установщик от root"
         return 1
     fi
 
@@ -19,43 +19,35 @@ check_root()
 }
 
 ########################################
-# Проверка Arch окружения
+# Проверка Arch ISO
 ########################################
 
 check_arch_environment()
 {
-    if [[ ! -f /etc/arch-release ]]; then
-        msg_warning "Система не определена как Arch Linux"
-        return 1
-    fi
+    [[ -f /etc/arch-release ]] \
+        || {
+            msg_error "Не обнаружено Arch окружение"
+            return 1
+        }
 
-    msg_success "Arch Linux окружение обнаружено"
+    msg_success "Arch Linux окружение"
 }
 
 ########################################
-# Проверка виртуальных файловых систем
+# Проверка системных каталогов
 ########################################
 
 check_system_mounts()
 {
-    local mounts=(
-        /proc
-        /sys
-        /dev
-    )
+    local dir
 
-    local mount
-
-    for mount in "${mounts[@]}"; do
-        if [[ ! -d "$mount" ]]; then
-            msg_error "Отсутствует: $mount"
-            return 1
-        fi
+    for dir in /proc /sys /dev; do
+        [[ -d "$dir" ]] \
+            || return 1
     done
 
     msg_success "Системные каталоги доступны"
 }
-
 
 ########################################
 # Проверка памяти
@@ -67,16 +59,11 @@ check_memory()
 
     memory=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
 
-    if (( memory < 512 )); then
-        msg_warning "Мало оперативной памяти: ${memory} MB"
-    else
-        msg_success "Память: ${memory} MB"
-    fi
+    msg_info "Память: ${memory} MB"
 }
 
-
 ########################################
-# Проверка режима загрузки
+# Определение загрузки
 ########################################
 
 check_boot_mode()
@@ -89,12 +76,11 @@ check_boot_mode()
 
     export BOOT_MODE
 
-    msg_info "Режим загрузки: ${BOOT_MODE}"
+    msg_info "Режим загрузки: $BOOT_MODE"
 }
 
-
 ########################################
-# Проверка команд установки
+# Проверка инструментов
 ########################################
 
 check_installer_tools()
@@ -104,44 +90,35 @@ check_installer_tools()
         arch-chroot
         genfstab
         lsblk
-        fdisk
     )
 
     local tool
 
     for tool in "${tools[@]}"; do
-        if ! command -v "$tool" >/dev/null 2>&1; then
-            msg_error "Инструмент отсутствует: $tool"
-            return 1
-        fi
+        command -v "$tool" >/dev/null 2>&1 \
+            || {
+                msg_error "Нет команды: $tool"
+                return 1
+            }
     done
 
     msg_success "Инструменты установки доступны"
 }
 
 ########################################
-# Общая проверка окружения
+# Полная проверка
 ########################################
 
 validate_environment()
 {
     section "Проверка окружения"
 
-    check_root \
-        || return 1
-
-    check_arch_environment \
-        || return 1
-
-    check_system_mounts \
-        || return 1
-
+    check_root
+    check_arch_environment
+    check_system_mounts
     check_memory
-
     check_boot_mode
+    check_installer_tools
 
-    check_installer_tools \
-        || return 1
-
-    msg_success "Окружение готово к установке"
+    msg_success "Окружение готово"
 }
