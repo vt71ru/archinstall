@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 #
 # ArchInstaller
-# Language module
+# Installer language module
 #
 
 ########################################
-# Доступные языки
+# Языки установщика
 ########################################
 
 readonly LANGUAGES=(
-    "English"
     "Русский"
+    "English"
 )
 
 readonly LANGUAGE_FILES=(
-    "en.sh"
     "ru.sh"
+    "en.sh"
 )
 
 ########################################
@@ -24,49 +24,29 @@ readonly LANGUAGE_FILES=(
 
 select_language()
 {
-    section "Выбор языка"
+    section "Язык установщика"
 
     menu_select \
-        "Выберите язык установщика" \
+        "Выберите язык" \
         "${LANGUAGES[@]}"
 
     LANGUAGE_FILE="${LANGUAGE_FILES[$((REPLY-1))]}"
 
     export LANGUAGE_FILE
-
-    msg_success "Выбран язык: ${LANGUAGES[$((REPLY-1))]}"
 }
 
 ########################################
-# Загрузка словаря
+# Загрузка языка
 ########################################
 
 load_language()
 {
     local file="${LANG_DIR}/${LANGUAGE_FILE}"
 
-    if [[ ! -f "$file" ]]; then
-        msg_error "Языковой файл не найден: $file"
-        return 1
-    fi
+    [[ -f "$file" ]] \
+        || return 1
 
-    # shellcheck source=/dev/null
     source "$file"
 
-    msg_success "Загружен словарь: ${LANGUAGE_FILE}"
-}
-
-########################################
-# Получение перевода
-########################################
-
-lang()
-{
-    local key="$1"
-
-    if [[ -n "${!key:-}" ]]; then
-        printf '%s\n' "${!key}"
-    else
-        printf '%s\n' "$key"
-    fi
+    msg_success "Язык загружен"
 }
