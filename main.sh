@@ -108,23 +108,38 @@ load_config()
 # Module loading
 ########################################
 
+########################################
+# Module loading
+########################################
+
 load_modules()
 {
     local module
     local file
 
-    section "Загрузка модулей"
+    # Безопасный вывод заголовка (пока функция section не загружена)
+    if declare -f section >/dev/null; then
+        section "Загрузка модулей"
+    else
+        echo "=== Загрузка модулей ==="
+    fi
 
     for module in "${MODULES[@]}"; do
         file="${LIB_DIR}/${module}.sh"
 
+        # Проверяем доступность файла на чтение
         [[ -r "$file" ]] \
-            || die "Модуль отсутствует: $module"
+            || die "Модуль отсутствует или недоступен: $module ($file)"
 
         # shellcheck source=/dev/null
         source "$file"
 
-        msg_success "$module"
+        # Безопасно выводим статус (msg_success появится только после загрузки ui/colors)
+        if declare -f msg_success >/dev/null; then
+            msg_success "$module"
+        else
+            echo "  [+] $module"
+        fi
     done
 }
 
