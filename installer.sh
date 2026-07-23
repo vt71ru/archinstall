@@ -44,6 +44,7 @@ readonly MODULES=(
     utils
     validation
     cleanup
+    language
     network
     locale
     disks
@@ -261,8 +262,10 @@ main()
 
     check_root
 
+# Installer language
     select_language
 
+# Load selected language dictionary
     if declare -f load_language >/dev/null; then
         load_language
     fi
