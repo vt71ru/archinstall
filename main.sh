@@ -35,7 +35,24 @@ if [[ "$DEBUG" == "1" ]]; then
 fi
 
 ########################################
-# Modules
+# Early error handling
+########################################
+
+die()
+{
+    echo
+
+    if declare -f msg_error >/dev/null; then
+        msg_error "$*"
+    else
+        echo "[ERROR] $*" >&2
+    fi
+
+    exit 1
+}
+
+########################################
+# Required modules
 ########################################
 
 readonly MODULES=(
@@ -55,7 +72,7 @@ readonly MODULES=(
 )
 
 ########################################
-# Commands
+# Required commands
 ########################################
 
 readonly COMMANDS=(
@@ -65,22 +82,20 @@ readonly COMMANDS=(
     grep
     lsblk
     ip
+    mount
+    umount
+    blkid
 )
 
 ########################################
-# Error handling
+# Environment checks
 ########################################
 
-die()
+check_root()
 {
-    echo
-    msg_error "$*"
-    exit 1
+    [[ "$EUID" -eq 0 ]] \
+        || die "Установщик должен быть запущен от root"
 }
-
-########################################
-# Project validation
-########################################
 
 check_project()
 {
@@ -100,13 +115,9 @@ check_project()
 
 load_config()
 {
-    # shellcheck source=/dev/null
+    # shellcheck disable=SC1090
     source "$CONFIG_FILE"
 }
-
-########################################
-# Module loading
-########################################
 
 ########################################
 # Module loading
@@ -117,24 +128,19 @@ load_modules()
     local module
     local file
 
-    # Безопасный вывод заголовка (пока функция section не загружена)
-    if declare -f section >/dev/null; then
-        section "Загрузка модулей"
-    else
-        echo "=== Загрузка модулей ==="
-    fi
+    echo
+    echo "=== Загрузка модулей ==="
 
     for module in "${MODULES[@]}"; do
+
         file="${LIB_DIR}/${module}.sh"
 
-        # Проверяем доступность файла на чтение
         [[ -r "$file" ]] \
-            || die "Модуль отсутствует или недоступен: $module ($file)"
+            || die "Модуль недоступен: $file"
 
-        # shellcheck source=/dev/null
+        # shellcheck disable=SC1090
         source "$file"
 
-        # Безопасно выводим статус (msg_success появится только после загрузки ui/colors)
         if declare -f msg_success >/dev/null; then
             msg_success "$module"
         else
@@ -154,6 +160,7 @@ check_commands()
     section "Проверка команд"
 
     for cmd in "${COMMANDS[@]}"; do
+
         command -v "$cmd" >/dev/null 2>&1 \
             || die "Команда отсутствует: $cmd"
 
@@ -162,7 +169,7 @@ check_commands()
 }
 
 ########################################
-# Required functions
+# Function validation
 ########################################
 
 check_functions()
@@ -186,23 +193,39 @@ check_functions()
     section "Проверка функций"
 
     for func in "${required[@]}"; do
+
         declare -f "$func" >/dev/null \
             || die "Функция отсутствует: $func"
+
     done
 
     msg_success "Все функции доступны"
 }
 
 ########################################
-# Signal handlers
+# Signal handling
 ########################################
 
 install_traps()
 {
     if declare -f cleanup >/dev/null; then
-        trap 'cleanup $? "${BASH_COMMAND}"' ERR
-        trap 'cleanup 130 "Interrupted"' SIGINT
-        trap 'cleanup 143 "Terminated"' SIGTERM
+
+        trap '
+            code=$?
+            cleanup "$code" "$BASH_COMMAND"
+            exit "$code"
+        ' ERR
+
+        trap '
+            cleanup 130 "Interrupted"
+            exit 130
+        ' SIGINT
+
+        trap '
+            cleanup 143 "Terminated"
+            exit 143
+        ' SIGTERM
+
     fi
 }
 
@@ -215,6 +238,8 @@ bootstrap()
     echo
     echo "${APP_NAME} ${APP_VERSION}"
     echo
+
+    check_root
 
     check_project
 
@@ -230,7 +255,7 @@ bootstrap()
 }
 
 ########################################
-# Main workflow
+# Installation workflow
 ########################################
 
 main()
