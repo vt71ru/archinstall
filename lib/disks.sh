@@ -11,11 +11,9 @@
 get_disk_free_space()
 {
     local disk="$1"
-    local free="0"
+    local free="-"
 
-    # Свободное место на существующих разделах
     while read -r mountpoint; do
-
         [[ -n "$mountpoint" ]] || continue
 
         local value
@@ -24,7 +22,7 @@ get_disk_free_space()
             | awk 'NR==2 {print $4}')
 
         [[ -n "$value" ]] \
-            && free="${value}"
+            && free="$value"
 
     done < <(
         lsblk \
@@ -67,6 +65,7 @@ show_disk_table()
         "------------" \
         "---------------" \
         "---------------"
+
     while read -r name model type size sector; do
 
         local path="/dev/${name}"
@@ -129,10 +128,11 @@ select_disk()
 
     section "Выбор диска"
 
+    [[ -n "${TARGET_DISK:-}" ]] || true
+
     show_disk_table
 
-    read -rp \
-        "Введите номер диска: " choice
+    read -rp "Введите номер диска: " choice
 
     disk=$(get_disk_by_number "$choice")
 
@@ -146,8 +146,6 @@ select_disk()
 
     echo
     echo "Выбран диск:"
-    echo
-
     lsblk "$disk"
 
     echo
